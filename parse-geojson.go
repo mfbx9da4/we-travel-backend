@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"net/http"
+	"os"
 )
 
 type Property struct {
@@ -38,22 +38,22 @@ type GeoJson struct {
 var graph Graph
 
 func loadGeoJSON() {
-	geoJsonDownloadLink := "https://ucb7e1be7e59700bb615fc052d06.dl.dropboxusercontent.com/cd/0/get/ApeoomlSroMi4LLrd88j2O1YyfZcz-fnOcR-BMu7Ca3F-aclMpnyLmlzJPZtgze6QSfiGh_SZAcCl-TzGSrcNR14iFsaOBl-vs7CsUzWnL6UbsaH7V_CR-apDThjG8fUH78/file?dl=1DownloadLink"
-	resp, err := http.Get(geoJsonDownloadLink)
-	if err != nil {
-		// handle error
-	}
-	defer resp.Body.Close()
-	jsonFile := resp.Body
+	// geoJsonDownloadLink := "https://ucb7e1be7e59700bb615fc052d06.dl.dropboxusercontent.com/cd/0/get/ApeoomlSroMi4LLrd88j2O1YyfZcz-fnOcR-BMu7Ca3F-aclMpnyLmlzJPZtgze6QSfiGh_SZAcCl-TzGSrcNR14iFsaOBl-vs7CsUzWnL6UbsaH7V_CR-apDThjG8fUH78/file?dl=1DownloadLink"
+	// resp, err := http.Get(geoJsonDownloadLink)
+	// if err != nil {
+	// 	// handle error
+	// }
+	// defer resp.Body.Close()
+	// jsonFile := resp.Body
 	// GeoJSON for central london around highbury islington
-	// jsonFile, err := os.Open("./data/central.geojson")
+	jsonFile, err := os.Open("./data/central.geojson")
 	// GeoJSON for Greater London
 	// from http://download.geofabrik.de/europe/great-britain/england/greater-london.html
 	// jsonFile, err := os.Open("./data/greater-london-latest.geojson")
 	// fetch from
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
+	if err != nil {
+		fmt.Println(err)
+	}
 	fmt.Println("Successfully Opened geojson")
 	byteValue, _ := ioutil.ReadAll(jsonFile)
 	fmt.Println("Successfully ReadAll geojson")
@@ -88,7 +88,7 @@ func loadGeoJSON() {
 	fmt.Println("geojson Graph created with", len(graph.nodes), "nodes")
 }
 
-func calculatePath(startCoords Coordinate, endCoords Coordinate) []Node {
+func calculatePath(startCoords Coordinate, endCoords Coordinate) Route {
 	nodeStart := graph.FindNode(startCoords)
 	nodeEnd := graph.FindNode(endCoords)
 	pathFound := graph.FindPath(graph.nodes[nodeStart], graph.nodes[nodeEnd])

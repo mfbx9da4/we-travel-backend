@@ -28,6 +28,11 @@ func enableCors(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
 }
 
+type FindPathResponse struct {
+	Data     GeoJson `json:"data"`
+	Distance float64 `json:"distance"`
+}
+
 func findpathHandler(w http.ResponseWriter, r *http.Request) {
 	reqBody, err := ioutil.ReadAll(r.Body)
 	var newRequestBody PathRequestBody
@@ -37,8 +42,8 @@ func findpathHandler(w http.ResponseWriter, r *http.Request) {
 
 	json.Unmarshal(reqBody, &newRequestBody)
 
-	nodes := calculatePath(newRequestBody.FromLocation, newRequestBody.ToLocation)
-	coords := getCoordinates(nodes)
+	route := calculatePath(newRequestBody.FromLocation, newRequestBody.ToLocation)
+	coords := getCoordinates(route.Path)
 
 	geometry := Geometry{Type: "LineString", Coordinates: coords}
 	featureOut := Feature{Type: "Feature", ID: "1234", Properties: Property{}, Geometry: geometry}
@@ -46,12 +51,16 @@ func findpathHandler(w http.ResponseWriter, r *http.Request) {
 
 	features[0] = featureOut
 
-	geojsonData := GeoJson{
+	data := GeoJson{
 		Type:     "FeatureCollection",
 		Features: features,
 	}
 
-	geojsonDataInJson, _ := json.Marshal(&geojsonData)
+	response := FindPathResponse{
+		Data:     data,
+		Distance: route.Distance}
+
+	geojsonDataInJson, _ := json.Marshal(&response)
 
 	enableCors(&w)
 	w.Write(geojsonDataInJson)

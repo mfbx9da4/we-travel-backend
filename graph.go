@@ -143,9 +143,14 @@ func (g *Graph) FindNode(coords Coordinate) int {
 	return foundNodeIndex
 }
 
+type Route struct {
+	Path     []Node
+	Distance float64
+}
+
 // A* routing
 // heap has child nodes sorted by distance
-func (g *Graph) FindPath(src, dest *Node) []Node {
+func (g *Graph) FindPath(src, dest *Node) Route {
 	g.lock.RLock()
 	pqueue := make(PriorityQueue, 1)
 	rootPath := []Node{}
@@ -172,7 +177,7 @@ func (g *Graph) FindPath(src, dest *Node) []Node {
 
 			if *child == *dest {
 				fmt.Println("Found Dest with distance", pqitem.Priority)
-				return value.Path
+				return Route{value.Path, pqitem.Priority}
 			}
 
 			if !visited[child] {
@@ -182,8 +187,8 @@ func (g *Graph) FindPath(src, dest *Node) []Node {
 				dy := (node.Value[1] - child.Value[1])
 				remaingDx := (dest.Value[0] - child.Value[0])
 				remainingDy := (dest.Value[1] - child.Value[1])
-				remaining := math.Sqrt(remaingDx*remaingDx + remainingDy*remainingDy)
 				elapsed := math.Sqrt(dx*dx+dy*dy) + pqitem.Priority
+				remaining := math.Sqrt(remaingDx*remaingDx + remainingDy*remainingDy)
 				newItem := Item{
 					Value:    &queueItem,
 					Priority: elapsed + remaining,
@@ -195,5 +200,5 @@ func (g *Graph) FindPath(src, dest *Node) []Node {
 	}
 	g.lock.RUnlock()
 	// No path
-	return []Node{}
+	return Route{[]Node{}, -1}
 }
