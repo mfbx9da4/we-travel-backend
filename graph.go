@@ -127,7 +127,6 @@ func (g *Graph) FindNode(coords Coordinate) int {
 	//min distance
 	var foundNodeIndex int
 	var minDistance float64
-	//index of node
 	// Probably there is a better algo for this, just doing the brute force sorry :(
 	for i := 0; i < len(nodes); i++ {
 		//calc distance
@@ -152,9 +151,9 @@ type Route struct {
 // heap has child nodes sorted by distance
 func (g *Graph) FindPath(src, dest *Node) Route {
 	g.lock.RLock()
-	pqueue := make(PriorityQueue, 1)
-	rootPath := []Node{}
-	rootItem := QueueItem{*src, rootPath}
+	var pqueue = make(PriorityQueue, 1)
+	var rootPath = []Node{}
+	var rootItem = QueueItem{*src, rootPath}
 	pqueue[0] = &Item{
 		Value:    &rootItem,
 		Priority: 0,

@@ -38,6 +38,8 @@ type GeoJson struct {
 var graph Graph
 
 func loadGeoJSON() {
+	// GeoJSON for Greater London
+	// from http://download.geofabrik.de/europe/great-britain/england/greater-london.html
 	// geoJsonDownloadLink := "https://ucb7e1be7e59700bb615fc052d06.dl.dropboxusercontent.com/cd/0/get/ApeoomlSroMi4LLrd88j2O1YyfZcz-fnOcR-BMu7Ca3F-aclMpnyLmlzJPZtgze6QSfiGh_SZAcCl-TzGSrcNR14iFsaOBl-vs7CsUzWnL6UbsaH7V_CR-apDThjG8fUH78/file?dl=1DownloadLink"
 	// resp, err := http.Get(geoJsonDownloadLink)
 	// if err != nil {
@@ -47,10 +49,6 @@ func loadGeoJSON() {
 	// jsonFile := resp.Body
 	// GeoJSON for central london around highbury islington
 	jsonFile, err := os.Open("./data/central.geojson")
-	// GeoJSON for Greater London
-	// from http://download.geofabrik.de/europe/great-britain/england/greater-london.html
-	// jsonFile, err := os.Open("./data/greater-london-latest.geojson")
-	// fetch from
 	if err != nil {
 		fmt.Println(err)
 	}
