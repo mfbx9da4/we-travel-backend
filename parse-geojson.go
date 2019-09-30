@@ -48,7 +48,10 @@ func loadGeoJSON() {
 	// defer resp.Body.Close()
 	// jsonFile := resp.Body
 	// GeoJSON for central london around highbury islington
-	jsonFile, err := os.Open("./data/central.geojson")
+	// jsonFile, err := os.Open("./data/central.geojson")
+	// jsonFile, err := os.Open("./data/greater-london-latest.geojson")
+	// 2.73GB
+	jsonFile, err := os.Open("./data/cleaned.geojson")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -57,28 +60,20 @@ func loadGeoJSON() {
 	fmt.Println("Successfully ReadAll geojson")
 	var geojson GeoJson
 	json.Unmarshal(byteValue, &geojson)
+	fmt.Println("Successfully Unmarshalled geojson with N features", len(geojson.Features))
 
 	for i := 0; i < len(geojson.Features); i++ {
-		isLineString := geojson.Features[i].Geometry.Type == "LineString"
-		isHighway := geojson.Features[i].Properties.Highway != ""
-		hasSidewalk := geojson.Features[i].Properties.Sidewalk != "" || geojson.Features[i].Properties.Sidewalk != "none"
-		isPath := geojson.Features[i].Properties.Highway == "path"
-		isValidPath := geojson.Features[i].Properties.Highway == "path" && (geojson.Features[i].Properties.Access == "no" || geojson.Features[i].Properties.Access == "private")
-		isNotPathOrIsValidPath := !isPath || isValidPath
-		isLit := geojson.Features[i].Properties.Lit != "" || geojson.Features[i].Properties.Lit == "yes"
-		if isHighway && isLineString && hasSidewalk && isNotPathOrIsValidPath && isLit {
-			var feature = geojson.Features[i]
-			var prev *Node
-			for j := 0; j < len(feature.Geometry.Coordinates); j++ {
-				var coords = feature.Geometry.Coordinates[j]
-				node := CreateNode(coords)
-				graph.AddNode(&node)
-				if j != 0 {
-					graph.AddEdge(&node, prev)
-					graph.AddEdge(prev, &node)
-				}
-				prev = &node
+		var feature = geojson.Features[i]
+		var prev *Node
+		for j := 0; j < len(feature.Geometry.Coordinates); j++ {
+			var coords = feature.Geometry.Coordinates[j]
+			node := CreateNode(coords)
+			graph.AddNode(&node)
+			if j != 0 {
+				graph.AddEdge(&node, prev)
+				graph.AddEdge(prev, &node)
 			}
+			prev = &node
 		}
 	}
 
