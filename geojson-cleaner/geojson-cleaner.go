@@ -67,7 +67,7 @@ func main() {
 			var feature = geojson.Features[i]
 			if len(feature.Geometry.Coordinates) > 0 {
 				var coord = feature.Geometry.Coordinates[0]
-				// arbitrary central area to reduce total size
+				// arbitrary central area to reduce total geojson size
 				if coord[0] > x0 && coord[0] < x1 && coord[1] < y0 && coord[1] > y1 {
 					output.Features = append(output.Features, feature)
 				}

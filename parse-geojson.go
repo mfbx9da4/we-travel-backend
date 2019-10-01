@@ -35,9 +35,27 @@ type GeoJson struct {
 	Features []Feature `json:"features"`
 }
 
-var graph Graph
+func createGraph(geojson GeoJson) Graph {
+	var graph Graph
+	for i := 0; i < len(geojson.Features); i++ {
+		var feature = geojson.Features[i]
+		var prev *Node
+		for j := 0; j < len(feature.Geometry.Coordinates); j++ {
+			var coords = feature.Geometry.Coordinates[j]
+			node := CreateNode(coords)
+			graph.AddNode(&node)
+			if j != 0 {
+				graph.AddEdge(&node, prev)
+				graph.AddEdge(prev, &node)
+			}
+			prev = &node
+		}
+	}
+	fmt.Println("geojson Graph created with", len(graph.nodes), "nodes")
+	return graph
+}
 
-func loadGeoJSON() {
+func loadGeoJSON() Graph {
 	// GeoJSON for Greater London
 	// from http://download.geofabrik.de/europe/great-britain/england/greater-london.html
 	// geoJsonDownloadLink := "https://ucb7e1be7e59700bb615fc052d06.dl.dropboxusercontent.com/cd/0/get/ApeoomlSroMi4LLrd88j2O1YyfZcz-fnOcR-BMu7Ca3F-aclMpnyLmlzJPZtgze6QSfiGh_SZAcCl-TzGSrcNR14iFsaOBl-vs7CsUzWnL6UbsaH7V_CR-apDThjG8fUH78/file?dl=1DownloadLink"
@@ -62,29 +80,6 @@ func loadGeoJSON() {
 	json.Unmarshal(byteValue, &geojson)
 	fmt.Println("Successfully Unmarshalled geojson with N features", len(geojson.Features))
 
-	for i := 0; i < len(geojson.Features); i++ {
-		var feature = geojson.Features[i]
-		var prev *Node
-		for j := 0; j < len(feature.Geometry.Coordinates); j++ {
-			var coords = feature.Geometry.Coordinates[j]
-			node := CreateNode(coords)
-			graph.AddNode(&node)
-			if j != 0 {
-				graph.AddEdge(&node, prev)
-				graph.AddEdge(prev, &node)
-			}
-			prev = &node
-		}
-	}
-
 	defer jsonFile.Close()
-	fmt.Println("geojson Graph created with", len(graph.nodes), "nodes")
-}
-
-func calculatePath(startCoords Coordinate, endCoords Coordinate) Route {
-	nodeStart := graph.FindNode(startCoords)
-	nodeEnd := graph.FindNode(endCoords)
-	pathFound := graph.FindPath(graph.nodes[nodeStart], graph.nodes[nodeEnd])
-	fmt.Println(pathFound)
-	return pathFound
+	return createGraph(geojson)
 }

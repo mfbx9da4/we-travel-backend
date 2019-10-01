@@ -33,66 +33,67 @@ type Graph struct {
 }
 
 // AddNode adds a node to the graph
-func (g *Graph) AddNode(n *Node) {
-	g.lock.Lock()
-	g.nodes = append(g.nodes, n)
-	g.lock.Unlock()
+func (graph *Graph) AddNode(n *Node) {
+	graph.lock.Lock()
+	graph.nodes = append(graph.nodes, n)
+	graph.lock.Unlock()
 }
 
 // AddEdge adds an edge to the graph
-func (g *Graph) AddEdge(n1, n2 *Node) {
-	g.lock.Lock()
-	if g.edges == nil {
-		g.edges = make(map[Node][]*Node)
+func (graph *Graph) AddEdge(n1, n2 *Node) {
+	graph.lock.Lock()
+	if graph.edges == nil {
+		graph.edges = make(map[Node][]*Node)
 	}
-	g.edges[*n1] = append(g.edges[*n1], n2)
-	g.edges[*n2] = append(g.edges[*n2], n1)
-	g.lock.Unlock()
+	graph.edges[*n1] = append(graph.edges[*n1], n2)
+	graph.edges[*n2] = append(graph.edges[*n2], n1)
+	graph.lock.Unlock()
 }
 
 // Print graph
-func (g *Graph) String() {
-	g.lock.RLock()
+func (graph *Graph) String() {
+	graph.lock.RLock()
 	s := ""
-	for i := 0; i < len(g.nodes); i++ {
-		s += g.nodes[i].String() + " -> "
-		near := g.edges[*g.nodes[i]]
+	for i := 0; i < len(graph.nodes); i++ {
+		s += graph.nodes[i].String() + " -> "
+		near := graph.edges[*graph.nodes[i]]
 		for j := 0; j < len(near); j++ {
 			s += near[j].String() + " "
 		}
 		s += "\n"
 	}
 	fmt.Println(s)
-	g.lock.RUnlock()
+	graph.lock.RUnlock()
 }
 
-type QueueItem struct {
-	Node Node
-	Path []Node
+type QueueItemValue struct {
+	Node     Node
+	Path     []Node
+	Distance float64
 }
 
 type NodeQueue struct {
-	items []QueueItem
+	items []QueueItemValue
 	lock  sync.RWMutex
 }
 
 // New creates a new NodeQueue
 func (s *NodeQueue) New() *NodeQueue {
 	s.lock.Lock()
-	s.items = []QueueItem{}
+	s.items = []QueueItemValue{}
 	s.lock.Unlock()
 	return s
 }
 
 // Enqueue adds an Node to the end of the queue
-func (s *NodeQueue) Enqueue(t QueueItem) {
+func (s *NodeQueue) Enqueue(t QueueItemValue) {
 	s.lock.Lock()
 	s.items = append(s.items, t)
 	s.lock.Unlock()
 }
 
 // Dequeue removes an Node from the start of the queue
-func (s *NodeQueue) Dequeue() *QueueItem {
+func (s *NodeQueue) Dequeue() *QueueItemValue {
 	s.lock.Lock()
 	item := s.items[0]
 	s.items = s.items[1:len(s.items)]
@@ -101,7 +102,7 @@ func (s *NodeQueue) Dequeue() *QueueItem {
 }
 
 // Front returns the item next in the queue, without removing it
-func (s *NodeQueue) Front() *QueueItem {
+func (s *NodeQueue) Front() *QueueItemValue {
 	s.lock.RLock()
 	item := s.items[0]
 	s.lock.RUnlock()
@@ -122,8 +123,8 @@ func (s *NodeQueue) Size() int {
 	return len(s.items)
 }
 
-func (g *Graph) FindNode(coords Coordinate) int {
-	nodes := g.nodes
+func (graph *Graph) FindNode(coords Coordinate) int {
+	nodes := graph.nodes
 	//min distance
 	var foundNodeIndex int
 	var minDistance float64
@@ -147,48 +148,55 @@ type Route struct {
 	Distance float64
 }
 
-// A* routing
-// heap has child nodes sorted by distance
-func (g *Graph) FindPath(src, dest *Node) Route {
-	g.lock.RLock()
+/*
+FindPath Uses A* routing to find shortest path
+(Keeps a min heap sorted by elapsed + remaing distance).
+*/
+func (graph *Graph) FindPath(src, dest *Node) Route {
+	graph.lock.RLock()
+
+	// Init priority queue
 	var pqueue = make(PriorityQueue, 1)
-	var rootPath = []Node{}
-	var rootItem = QueueItem{*src, rootPath}
-	pqueue[0] = &Item{
-		Value:    &rootItem,
+	var rootPath = []Node{*src}
+	var rootValue = QueueItemValue{*src, rootPath, 0}
+	pqueue[0] = &QueueItem{
+		Value:    &rootValue,
 		Priority: 0,
 		Index:    0,
 	}
 	heap.Init(&pqueue)
+
+	// Keep track of visited
 	visited := make(map[*Node]bool)
 	for {
 		if pqueue.Len() == 0 {
 			break
 		}
-		pqitem := pqueue.Pop().(*Item)
-		value := pqitem.Value
-		node := value.Node
+		pqitem := pqueue.Pop().(*QueueItem)
+		cur := pqitem.Value
+		node := cur.Node
 		visited[&node] = true
-		children := g.edges[node]
+		children := graph.edges[node]
 
 		for i := 0; i < len(children); i++ {
 			child := children[i]
+			dx := (node.Value[0] - child.Value[0])
+			dy := (node.Value[1] - child.Value[1])
+			remaingDx := (dest.Value[0] - child.Value[0])
+			remainingDy := (dest.Value[1] - child.Value[1])
+			elapsed := math.Sqrt(dx*dx+dy*dy) + cur.Distance
+			remaining := math.Sqrt(remaingDx*remaingDx + remainingDy*remainingDy)
 
 			if *child == *dest {
 				fmt.Println("Found Dest with distance", pqitem.Priority)
-				return Route{value.Path, pqitem.Priority}
+				path := append(cur.Path, *child)
+				return Route{path, elapsed}
 			}
 
 			if !visited[child] {
-				path := append(value.Path, *child)
-				queueItem := QueueItem{*child, path}
-				dx := (node.Value[0] - child.Value[0])
-				dy := (node.Value[1] - child.Value[1])
-				remaingDx := (dest.Value[0] - child.Value[0])
-				remainingDy := (dest.Value[1] - child.Value[1])
-				elapsed := math.Sqrt(dx*dx+dy*dy) + pqitem.Priority
-				remaining := math.Sqrt(remaingDx*remaingDx + remainingDy*remainingDy)
-				newItem := Item{
+				path := append(cur.Path, *child)
+				queueItem := QueueItemValue{*child, path, elapsed}
+				newItem := QueueItem{
 					Value:    &queueItem,
 					Priority: elapsed + remaining,
 				}
@@ -197,7 +205,14 @@ func (g *Graph) FindPath(src, dest *Node) Route {
 			}
 		}
 	}
-	g.lock.RUnlock()
+	graph.lock.RUnlock()
 	// No path
 	return Route{[]Node{}, -1}
+}
+
+func (graph *Graph) CalculatePath(startCoords Coordinate, endCoords Coordinate) Route {
+	nodeStart := graph.FindNode(startCoords)
+	nodeEnd := graph.FindNode(endCoords)
+	pathFound := graph.FindPath(graph.nodes[nodeStart], graph.nodes[nodeEnd])
+	return pathFound
 }

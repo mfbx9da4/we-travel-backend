@@ -42,7 +42,7 @@ func findpathHandler(w http.ResponseWriter, r *http.Request) {
 
 	json.Unmarshal(reqBody, &newRequestBody)
 
-	route := calculatePath(newRequestBody.FromLocation, newRequestBody.ToLocation)
+	route := graph.CalculatePath(newRequestBody.FromLocation, newRequestBody.ToLocation)
 	coords := getCoordinates(route.Path)
 
 	geometry := Geometry{Type: "LineString", Coordinates: coords}
@@ -70,8 +70,10 @@ func homeLink(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Lightpath backend is running")
 }
 
+var graph Graph
+
 func main() {
-	loadGeoJSON()
+	graph = loadGeoJSON()
 
 	port := os.Getenv("PORT")
 	if port == "" {
