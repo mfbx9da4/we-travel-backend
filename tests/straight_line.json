@@ -7,15 +7,7 @@
     "type": "FeatureCollection",
     "features": [
       {
-        "type": "Feature",
-        "id": "relation/192811",
-        "properties": {
-          "from": "Finsbury Square",
-          "to": "South Grove",
-          "id": "relation/192811"
-        },
         "geometry": {
-          "type": "LineString",
           "coordinates": [[0, 0], [0, 1], [0, 2], [0, 3]]
         }
       }
