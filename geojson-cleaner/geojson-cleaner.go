@@ -63,15 +63,14 @@ func main() {
 		isValidPath := geojson.Features[i].Properties.Highway == "path" && (geojson.Features[i].Properties.Access == "no" || geojson.Features[i].Properties.Access == "private")
 		isNotPathOrIsValidPath := !isPath || isValidPath
 		isLit := geojson.Features[i].Properties.Lit != "" || geojson.Features[i].Properties.Lit == "yes"
-		if isHighway && isLineString && hasSidewalk && isNotPathOrIsValidPath && isLit {
-			var feature = geojson.Features[i]
-			if len(feature.Geometry.Coordinates) > 0 {
-				var coord = feature.Geometry.Coordinates[0]
-				// arbitrary central area to reduce total geojson size
-				if coord[0] > x0 && coord[0] < x1 && coord[1] < y0 && coord[1] > y1 {
-					output.Features = append(output.Features, feature)
-				}
-
+		shouldInclude := isHighway && isLineString && hasSidewalk && isNotPathOrIsValidPath && isLit
+		fmt.Println("Warning: including all nodes even though shouldInclude", shouldInclude)
+		var feature = geojson.Features[i]
+		if len(feature.Geometry.Coordinates) > 0 {
+			var coord = feature.Geometry.Coordinates[0]
+			// arbitrary central area to reduce total geojson size
+			if coord[0] > x0 && coord[0] < x1 && coord[1] < y0 && coord[1] > y1 {
+				output.Features = append(output.Features, feature)
 			}
 		}
 	}

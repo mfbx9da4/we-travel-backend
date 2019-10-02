@@ -188,6 +188,7 @@ func (graph *Graph) FindPath(src, dest *Node) Route {
 			remaining := math.Sqrt(remaingDx*remaingDx + remainingDy*remainingDy)
 
 			if *child == *dest {
+				// Only add to path if different gradient
 				path := append(cur.Path, *child)
 				return Route{path, elapsed}
 			}
