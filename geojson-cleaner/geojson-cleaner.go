@@ -50,10 +50,15 @@ func main() {
 
 	var output = GeoJson{Type: geojson.Type, Features: make([]Feature, 0)}
 
-	var x0 = -0.158044
-	var y0 = 51.546690
-	var x1 = -0.072729
-	var y1 = 51.494244
+	// var x0 = -0.158044
+	// var y0 = 51.546690
+	// var x1 = -0.072729
+	// var y1 = 51.494244
+
+	var x0 = -0.12813
+	var y0 = 51.51816
+	var x1 = -0.12062
+	var y1 = 51.51157
 
 	for i := 0; i < len(geojson.Features); i++ {
 		isLineString := geojson.Features[i].Geometry.Type == "LineString"
