@@ -188,7 +188,6 @@ func (graph *Graph) FindPath(src, dest *Node) Route {
 			remaining := math.Sqrt(remaingDx*remaingDx + remainingDy*remainingDy)
 
 			if *child == *dest {
-				fmt.Println("Found Dest with distance", pqitem.Priority)
 				path := append(cur.Path, *child)
 				return Route{path, elapsed}
 			}

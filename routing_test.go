@@ -46,9 +46,11 @@ func TestSum(t *testing.T) {
 		"./tests/straight_line.json",
 		"./tests/three_roads.json",
 		"./tests/shortest_hops.json",
+		"./tests/intersection.json",
 	}
 
 	for i := 0; i < len(filenames); i++ {
+		fmt.Println("===>", filenames[i])
 		var expected = LoadFile(filenames[i])
 		var graph = createGraph(expected.GeoJSON)
 		var route = graph.CalculatePath(expected.From, expected.To)
