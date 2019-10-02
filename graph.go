@@ -11,6 +11,8 @@ import (
 	//"github.com/cheekybits/genny/generic"
 )
 
+var exists = struct{}{}
+
 // Node a single node that composes the tree
 type Node struct {
 	Value Coordinate
@@ -26,9 +28,11 @@ func (n *Node) String() string {
 	return fmt.Sprintf("%v", n.Value)
 }
 
+type SetOfNodes = map[*Node]struct{}
+
 type Graph struct {
 	nodes []*Node
-	edges map[Node][]*Node
+	edges map[Node]SetOfNodes
 	lock  sync.RWMutex
 }
 
@@ -43,10 +47,16 @@ func (graph *Graph) AddNode(n *Node) {
 func (graph *Graph) AddEdge(n1, n2 *Node) {
 	graph.lock.Lock()
 	if graph.edges == nil {
-		graph.edges = make(map[Node][]*Node)
+		graph.edges = make(map[Node]SetOfNodes)
 	}
-	graph.edges[*n1] = append(graph.edges[*n1], n2)
-	graph.edges[*n2] = append(graph.edges[*n2], n1)
+	if graph.edges[*n1] == nil {
+		graph.edges[*n1] = make(SetOfNodes)
+	}
+	if graph.edges[*n2] == nil {
+		graph.edges[*n2] = make(SetOfNodes)
+	}
+	graph.edges[*n1][n2] = exists
+	graph.edges[*n2][n1] = exists
 	graph.lock.Unlock()
 }
 
@@ -57,8 +67,8 @@ func (graph *Graph) String() {
 	for i := 0; i < len(graph.nodes); i++ {
 		s += graph.nodes[i].String() + " -> "
 		near := graph.edges[*graph.nodes[i]]
-		for j := 0; j < len(near); j++ {
-			s += near[j].String() + " "
+		for j := range near {
+			s += j.String() + " "
 		}
 		s += "\n"
 	}
@@ -178,8 +188,7 @@ func (graph *Graph) FindPath(src, dest *Node) Route {
 		visited[&node] = true
 		children := graph.edges[node]
 
-		for i := 0; i < len(children); i++ {
-			child := children[i]
+		for child := range children {
 			dx := (node.Value[0] - child.Value[0])
 			dy := (node.Value[1] - child.Value[1])
 			remaingDx := (dest.Value[0] - child.Value[0])
