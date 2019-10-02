@@ -4,7 +4,6 @@ import (
 	"container/heap"
 	"fmt"
 	"math"
-	"strconv"
 
 	//"math"
 	"sync"
@@ -19,8 +18,7 @@ type Node struct {
 }
 
 func CreateNode(coords Coordinate) Node {
-	var hash = strconv.FormatFloat(coords[0], 'f', -1, 64)
-	hash += strconv.FormatFloat(coords[1], 'f', -1, 64)
+	// var hash = strconv.FormatFloat(coords[0], 'f', -1, 64) + strconv.FormatFloat(coords[1], 'f', -1, 64)
 	return Node{coords}
 }
 
@@ -145,6 +143,9 @@ func (graph *Graph) FindNode(coords Coordinate) int {
 		dx := coords[0] - value[0]
 		dy := coords[1] - value[1]
 		distance := math.Sqrt(dx*dx + dy*dy)
+		if distance == 0 {
+			return i
+		}
 		if i == 0 || distance < minDistance {
 			foundNodeIndex = i
 			minDistance = distance
@@ -197,12 +198,13 @@ func (graph *Graph) FindPath(src, dest *Node) Route {
 			remaining := math.Sqrt(remaingDx*remaingDx + remainingDy*remainingDy)
 
 			if *child == *dest {
-				// Only add to path if different gradient
+				fmt.Println(*child, *dest)
 				path := append(cur.Path, *child)
 				return Route{path, elapsed}
 			}
 
 			if !visited[child] {
+				// TODO: Only add to path if different gradient
 				path := append(cur.Path, *child)
 				queueItem := QueueItemValue{*child, path, elapsed}
 				newItem := QueueItem{
@@ -222,6 +224,7 @@ func (graph *Graph) FindPath(src, dest *Node) Route {
 func (graph *Graph) CalculatePath(startCoords Coordinate, endCoords Coordinate) Route {
 	nodeStart := graph.FindNode(startCoords)
 	nodeEnd := graph.FindNode(endCoords)
+	fmt.Println("st, end,", nodeStart, nodeEnd)
 	pathFound := graph.FindPath(graph.nodes[nodeStart], graph.nodes[nodeEnd])
 	return pathFound
 }
