@@ -149,16 +149,13 @@ func (graph *Graph) FindNode(coords Coordinate) *Node {
 	if node == nil {
 		var minDistance float64 = math.MaxFloat64
 		// Probably there is a better algo for this, just doing the brute force sorry :(
-		for _, node := range graph.nodes {
-			value := node.Value
+		for _, cur := range graph.nodes {
+			value := cur.Value
 			dx := coords[0] - value[0]
 			dy := coords[1] - value[1]
 			distance := math.Sqrt(dx*dx + dy*dy)
-			if distance == 0 {
-				return node
-			}
 			if distance < minDistance {
-				node = node
+				node = cur
 				minDistance = distance
 			}
 		}
