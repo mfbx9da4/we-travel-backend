@@ -47,6 +47,7 @@ func TestSum(t *testing.T) {
 		"./tests/three_roads.json",
 		"./tests/shortest_hops.json",
 		"./tests/intersection.json",
+		"./tests/three_routes.json",
 	}
 
 	for i := 0; i < len(filenames); i++ {
