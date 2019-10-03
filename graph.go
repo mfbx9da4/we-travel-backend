@@ -15,21 +15,28 @@ var exists = struct{}{}
 // Node a single node that composes the tree
 type Node struct {
 	Value Coordinate
+	Hash  string
 }
 
-func CreateNode(coords Coordinate) Node {
-	// var hash = strconv.FormatFloat(coords[0], 'f', -1, 64) + strconv.FormatFloat(coords[1], 'f', -1, 64)
-	return Node{coords}
+// GetOrCreateNode for create node from coords
+func GetOrCreateNode(coords Coordinate) Node {
+	hash := HashCoordinate(coords)
+	if graph.nodes[hash] == nil {
+		return Node{coords, hash}
+	}
+	return *graph.nodes[hash]
 }
 
 func (n *Node) String() string {
 	return fmt.Sprintf("%v", n.Value)
 }
 
+// SetOfNodes Set of nodes
 type SetOfNodes = map[*Node]struct{}
 
+// Graph Basic graph complete with concurrency safe lock
 type Graph struct {
-	nodes []*Node
+	nodes map[string]*Node
 	edges map[Node]SetOfNodes
 	lock  sync.RWMutex
 }
@@ -37,7 +44,10 @@ type Graph struct {
 // AddNode adds a node to the graph
 func (graph *Graph) AddNode(n *Node) {
 	graph.lock.Lock()
-	graph.nodes = append(graph.nodes, n)
+	if graph.nodes == nil {
+		graph.nodes = make(map[string]*Node)
+	}
+	graph.nodes[n.Hash] = n
 	graph.lock.Unlock()
 }
 
@@ -62,9 +72,10 @@ func (graph *Graph) AddEdge(n1, n2 *Node) {
 func (graph *Graph) String() {
 	graph.lock.RLock()
 	s := ""
-	for i := 0; i < len(graph.nodes); i++ {
-		s += graph.nodes[i].String() + " -> "
-		near := graph.edges[*graph.nodes[i]]
+	// for i := 0; i < len(graph.nodes); i++ {
+	for _, node := range graph.nodes {
+		s += node.String() + " -> "
+		near := graph.edges[*node]
 		for j := range near {
 			s += j.String() + " "
 		}
@@ -131,29 +142,31 @@ func (s *NodeQueue) Size() int {
 	return len(s.items)
 }
 
-func (graph *Graph) FindNode(coords Coordinate) int {
-	nodes := graph.nodes
-	//min distance
-	var foundNodeIndex int
-	var minDistance float64
-	// Probably there is a better algo for this, just doing the brute force sorry :(
-	for i := 0; i < len(nodes); i++ {
-		//calc distance
-		value := nodes[i].Value
-		dx := coords[0] - value[0]
-		dy := coords[1] - value[1]
-		distance := math.Sqrt(dx*dx + dy*dy)
-		if distance == 0 {
-			return i
-		}
-		if i == 0 || distance < minDistance {
-			foundNodeIndex = i
-			minDistance = distance
+// FindNode find node from graph
+func (graph *Graph) FindNode(coords Coordinate) *Node {
+	hash := HashCoordinate(coords)
+	var node = graph.nodes[hash]
+	if node == nil {
+		var minDistance float64 = math.MaxFloat64
+		// Probably there is a better algo for this, just doing the brute force sorry :(
+		for _, node := range graph.nodes {
+			value := node.Value
+			dx := coords[0] - value[0]
+			dy := coords[1] - value[1]
+			distance := math.Sqrt(dx*dx + dy*dy)
+			if distance == 0 {
+				return node
+			}
+			if distance < minDistance {
+				node = node
+				minDistance = distance
+			}
 		}
 	}
-	return foundNodeIndex
+	return node
 }
 
+// Route Best route and distance of route
 type Route struct {
 	Path     []Node
 	Distance float64
@@ -221,10 +234,11 @@ func (graph *Graph) FindPath(src, dest *Node) Route {
 	return Route{[]Node{}, -1}
 }
 
+// CalculatePath Finds closest nodes to start and end
 func (graph *Graph) CalculatePath(startCoords Coordinate, endCoords Coordinate) Route {
 	nodeStart := graph.FindNode(startCoords)
 	nodeEnd := graph.FindNode(endCoords)
 	fmt.Println("st, end,", nodeStart, nodeEnd)
-	pathFound := graph.FindPath(graph.nodes[nodeStart], graph.nodes[nodeEnd])
+	pathFound := graph.FindPath(nodeStart, nodeEnd)
 	return pathFound
 }

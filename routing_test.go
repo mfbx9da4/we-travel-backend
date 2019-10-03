@@ -53,6 +53,7 @@ func TestSum(t *testing.T) {
 		fmt.Println("===>", filenames[i])
 		var expected = LoadFile(filenames[i])
 		var graph = createGraph(expected.GeoJSON)
+		graph.String()
 		var route = graph.CalculatePath(expected.From, expected.To)
 		var path = getCoordinates(route.Path)
 		if !equal(path, expected.ShortestPath) {

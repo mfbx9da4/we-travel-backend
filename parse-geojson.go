@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strconv"
 )
 
 type Property struct {
@@ -16,7 +17,14 @@ type Property struct {
 	Sidewalk string `json:"sidewalk"`
 }
 
+// Coordinate pair of lat, lng
 type Coordinate = [2]float64
+
+// HashCoordinate return coords as string
+func HashCoordinate(coords Coordinate) string {
+	var hash = strconv.FormatFloat(coords[0], 'f', -1, 64) + strconv.FormatFloat(coords[1], 'f', -1, 64)
+	return hash
+}
 
 type Geometry struct {
 	Type        string       `json:"type"`
@@ -42,7 +50,7 @@ func createGraph(geojson GeoJson) Graph {
 		var prev *Node
 		for j := 0; j < len(feature.Geometry.Coordinates); j++ {
 			var coords = feature.Geometry.Coordinates[j]
-			node := CreateNode(coords)
+			node := GetOrCreateNode(coords)
 			graph.AddNode(&node)
 			if j != 0 {
 				graph.AddEdge(&node, prev)
