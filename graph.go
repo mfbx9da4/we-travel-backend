@@ -222,6 +222,7 @@ func (graph *Graph) FindPath(src, dest *Node) Route {
 					Priority: elapsed + remaining,
 				}
 				heap.Push(&pqueue, &newItem)
+				pqueue.update(&newItem, newItem.Value, newItem.Priority)
 				visited[child] = true
 			}
 		}
