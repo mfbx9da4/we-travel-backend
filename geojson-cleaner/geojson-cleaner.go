@@ -55,21 +55,21 @@ func main() {
 	// var x1 = -0.072729
 	// var y1 = 51.494244
 
-	var x0 = -0.12813
-	var y0 = 51.51816
-	var x1 = -0.12062
-	var y1 = 51.51157
+	var x0 = -0.111391
+	var y0 = 51.535530
+	var x1 = -0.056361
+	var y1 = 51.507539
 
 	for i := 0; i < len(geojson.Features); i++ {
-		isLineString := geojson.Features[i].Geometry.Type == "LineString"
-		isHighway := geojson.Features[i].Properties.Highway != ""
-		hasSidewalk := geojson.Features[i].Properties.Sidewalk == "" || geojson.Features[i].Properties.Sidewalk != "none"
-		isPath := geojson.Features[i].Properties.Highway == "path"
-		isValidPath := geojson.Features[i].Properties.Highway == "path" && (geojson.Features[i].Properties.Access == "no" || geojson.Features[i].Properties.Access == "private")
-		isNotPathOrIsValidPath := !isPath || isValidPath
-		isLit := geojson.Features[i].Properties.Lit != "" || geojson.Features[i].Properties.Lit == "yes"
-		shouldInclude := isHighway && isLineString && hasSidewalk && isNotPathOrIsValidPath && isLit
-		fmt.Println("Warning: including all nodes even though shouldInclude", shouldInclude)
+		// isLineString := geojson.Features[i].Geometry.Type == "LineString"
+		// isHighway := geojson.Features[i].Properties.Highway != ""
+		// hasSidewalk := geojson.Features[i].Properties.Sidewalk == "" || geojson.Features[i].Properties.Sidewalk != "none"
+		// isPath := geojson.Features[i].Properties.Highway == "path"
+		// isValidPath := geojson.Features[i].Properties.Highway == "path" && (geojson.Features[i].Properties.Access == "no" || geojson.Features[i].Properties.Access == "private")
+		// isNotPathOrIsValidPath := !isPath || isValidPath
+		// isLit := geojson.Features[i].Properties.Lit != "" || geojson.Features[i].Properties.Lit == "yes"
+		// shouldInclude := isHighway && isLineString && hasSidewalk && isNotPathOrIsValidPath && isLit
+		// fmt.Println("Warning: including all nodes even though shouldInclude", shouldInclude)
 		var feature = geojson.Features[i]
 		if len(feature.Geometry.Coordinates) > 0 {
 			var coord = feature.Geometry.Coordinates[0]
