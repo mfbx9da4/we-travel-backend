@@ -25,6 +25,10 @@ func getCoordinates(nodes []Node) []Coordinate {
 	return result
 }
 
+func setJSONHeader(w *http.ResponseWriter) {
+	(*w).Header().Set("Content-Type", "application/json")
+}
+
 func enableCors(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
 }
@@ -68,14 +72,30 @@ func findpathHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(geojsonDataInJSON)
 }
 
+func mapHandler(w http.ResponseWriter, r *http.Request) {
+	jsonFile, err := os.Open(filename)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println("Successfully Opened geojson")
+	byteValue, _ := ioutil.ReadAll(jsonFile)
+	fmt.Println("Successfully ReadAll geojson")
+	defer jsonFile.Close()
+	enableCors(&w)
+	setJSONHeader(&w)
+	fmt.Fprintf(w, string(byteValue))
+}
+
 func homeLink(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Lightpath backend is running")
 }
 
 var graph Graph
 
+var filename = "./data/cleaned.geojson"
+
 func main() {
-	graph = loadGeoJSON()
+	graph = loadGeoJSON(filename)
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -85,6 +105,7 @@ func main() {
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/", homeLink)
 	router.HandleFunc("/findpath", findpathHandler).Methods("POST")
+	router.HandleFunc("/map", mapHandler).Methods("GET")
 
 	fmt.Println("Listening on http://localhost:" + port)
 	log.Fatal(http.ListenAndServe(":"+port, router))

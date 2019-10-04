@@ -200,6 +200,7 @@ func (graph *Graph) FindPath(src, dest *Node) Route {
 		if pqueue.Len() == 0 {
 			break
 		}
+		// pqueue.Print()
 		pqitem := heap.Pop(&pqueue).(*QueueItem)
 		cur := pqitem.Value
 		node := cur.Node
@@ -207,6 +208,8 @@ func (graph *Graph) FindPath(src, dest *Node) Route {
 		children := graph.edges[node]
 
 		for child := range children {
+			// TODO: Calculate in km
+			// https://stackoverflow.com/a/1253545/1376627
 			dx := (node.Value[0] - child.Value[0])
 			dy := (node.Value[1] - child.Value[1])
 			remaingDx := (dest.Value[0] - child.Value[0])

@@ -42,11 +42,8 @@ func equal(coords1 []Coordinate, coords2 []Coordinate) bool {
 
 func TestCreateNode(t *testing.T) {
 	var graph Graph
-	fmt.Printf("%v\n", graph.nodes)
 	node1 := graph.GetOrCreateNode([2]float64{0, 0})
-	fmt.Printf("%v\n", graph.nodes)
 	node2 := graph.GetOrCreateNode([2]float64{0, 0})
-	fmt.Printf("%v\n", graph.nodes)
 	graph.Print()
 	if len(graph.nodes) > 1 {
 		t.Errorf("Created too many nodes Got %v", graph.nodes)
@@ -54,10 +51,37 @@ func TestCreateNode(t *testing.T) {
 	if node1 != node2 {
 		t.Errorf("Recreating nodes %v %v are not equal", node1, node2)
 	}
-	if &node1 != &node2 {
-		t.Errorf("Recreating nodes %p %p are not equal", &node1, &node2)
-	}
+	// if &node1 != &node2 {
+	// 	t.Errorf("Recreating nodes %p %p are not equal", &node1, &node2)
+	// }
 }
+
+// type Store map[int64]int64
+
+// func (s *Store) GetOrCreateByKey(key int64) *int64 {
+// 	store := *s
+// 	if val, ok := store[key]; ok {
+// 		fmt.Println("Found val")
+// 		return &val
+// 	}
+// 	store[key] = key
+// 	fmt.Println("Create val")
+// 	return &key
+// }
+
+// func TestPointers(t *testing.T) {
+// 	var myStore = make(Store, 0)
+// 	pval1 := myStore.GetOrCreateByKey(1) // Create a node
+// 	pval2 := myStore.GetOrCreateByKey(1) // Get it from the store
+// 	if pval1 != pval2 {
+// 		// Same val, this passes
+// 		t.Errorf("Values %v %v are not equal", pval1, pval2)
+// 	}
+// 	if &pval1 != &pval2 {
+// 		// Different pointer, this fails, expected to pass
+// 		t.Errorf("Pointers %p %p are not equal", &pval1, &pval2)
+// 	}
+// }
 
 func TestPaths(t *testing.T) {
 	filenames := []string{
@@ -67,10 +91,11 @@ func TestPaths(t *testing.T) {
 		"./tests/shortest_hops.json",
 		"./tests/intersection.json",
 		"./tests/three_routes.json",
+		"./tests/close_but_useless.json",
 	}
 
 	for i := 0; i < len(filenames); i++ {
-		// fmt.Println("===>", filenames[i])
+		fmt.Println("===>", filenames[i])
 		var expected = LoadFile(filenames[i])
 		var graph = createGraph(expected.GeoJSON)
 		var route = graph.CalculatePath(expected.From, expected.To)

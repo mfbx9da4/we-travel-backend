@@ -66,7 +66,7 @@ func createGraph(geojson GeoJSON) Graph {
 	return graph
 }
 
-func loadGeoJSON() Graph {
+func loadGeoJSON(filename string) Graph {
 	// GeoJSON for Greater London
 	// from http://download.geofabrik.de/europe/great-britain/england/greater-london.html
 	// geoJsonDownloadLink := "https://ucb7e1be7e59700bb615fc052d06.dl.dropboxusercontent.com/cd/0/get/ApeoomlSroMi4LLrd88j2O1YyfZcz-fnOcR-BMu7Ca3F-aclMpnyLmlzJPZtgze6QSfiGh_SZAcCl-TzGSrcNR14iFsaOBl-vs7CsUzWnL6UbsaH7V_CR-apDThjG8fUH78/file?dl=1DownloadLink"
@@ -80,7 +80,7 @@ func loadGeoJSON() Graph {
 	// jsonFile, err := os.Open("./data/central.geojson")
 	// jsonFile, err := os.Open("./data/greater-london-latest.geojson")
 	// 2.73GB
-	jsonFile, err := os.Open("./data/cleaned.geojson")
+	jsonFile, err := os.Open(filename)
 	if err != nil {
 		fmt.Println(err)
 	}

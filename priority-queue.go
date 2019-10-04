@@ -52,7 +52,7 @@ func (pq *PriorityQueue) Pop() interface{} {
 // Print prints items
 func (pq *PriorityQueue) Print() {
 	pqueue := *pq
-	fmt.Println("Printing priority queue of length", len(pqueue))
+	fmt.Println("* Printing priority queue of length", len(pqueue))
 	for i := 0; i < len(pqueue); i++ {
 		item := pqueue[i]
 		fmt.Println(item.Value.Node.Hash, "prio, dista", item.Priority, item.Value.Distance)
