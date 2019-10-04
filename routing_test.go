@@ -9,7 +9,7 @@ import (
 )
 
 type TestData struct {
-	GeoJSON      GeoJson      `json:"geojson"`
+	GeoJSON      GeoJSON      `json:"geojson"`
 	From         Coordinate   `json:"from"`
 	To           Coordinate   `json:"to"`
 	Distance     float64      `json:"distance"`
@@ -40,7 +40,26 @@ func equal(coords1 []Coordinate, coords2 []Coordinate) bool {
 	return true
 }
 
-func TestSum(t *testing.T) {
+func TestCreateNode(t *testing.T) {
+	var graph Graph
+	fmt.Printf("%v\n", graph.nodes)
+	node1 := graph.GetOrCreateNode([2]float64{0, 0})
+	fmt.Printf("%v\n", graph.nodes)
+	node2 := graph.GetOrCreateNode([2]float64{0, 0})
+	fmt.Printf("%v\n", graph.nodes)
+	graph.Print()
+	if len(graph.nodes) > 1 {
+		t.Errorf("Created too many nodes Got %v", graph.nodes)
+	}
+	if node1 != node2 {
+		t.Errorf("Recreating nodes %v %v are not equal", node1, node2)
+	}
+	if &node1 != &node2 {
+		t.Errorf("Recreating nodes %p %p are not equal", &node1, &node2)
+	}
+}
+
+func TestPaths(t *testing.T) {
 	filenames := []string{
 		"./tests/two_points.json",
 		"./tests/straight_line.json",
@@ -51,10 +70,9 @@ func TestSum(t *testing.T) {
 	}
 
 	for i := 0; i < len(filenames); i++ {
-		fmt.Println("===>", filenames[i])
+		// fmt.Println("===>", filenames[i])
 		var expected = LoadFile(filenames[i])
 		var graph = createGraph(expected.GeoJSON)
-		graph.String()
 		var route = graph.CalculatePath(expected.From, expected.To)
 		var path = getCoordinates(route.Path)
 		if !equal(path, expected.ShortestPath) {

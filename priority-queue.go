@@ -3,6 +3,7 @@ package main
 
 import (
 	"container/heap"
+	"fmt"
 )
 
 // An QueueItem is something we manage in a priority queue.
@@ -20,7 +21,7 @@ func (pq PriorityQueue) Len() int { return len(pq) }
 
 func (pq PriorityQueue) Less(i, j int) bool {
 	// We want Pop to give us the lowest
-	return pq[i].Priority > pq[j].Priority
+	return pq[i].Priority < pq[j].Priority
 }
 
 func (pq PriorityQueue) Swap(i, j int) {
@@ -29,6 +30,7 @@ func (pq PriorityQueue) Swap(i, j int) {
 	pq[j].Index = j
 }
 
+// Push pushes item onto priority queue
 func (pq *PriorityQueue) Push(x interface{}) {
 	n := len(*pq)
 	item := x.(*QueueItem)
@@ -36,6 +38,7 @@ func (pq *PriorityQueue) Push(x interface{}) {
 	*pq = append(*pq, item)
 }
 
+// Pop item from priority queue
 func (pq *PriorityQueue) Pop() interface{} {
 	old := *pq
 	n := len(old)
@@ -44,6 +47,16 @@ func (pq *PriorityQueue) Pop() interface{} {
 	item.Index = -1 // for safety
 	*pq = old[0 : n-1]
 	return item
+}
+
+// Print prints items
+func (pq *PriorityQueue) Print() {
+	pqueue := *pq
+	fmt.Println("Printing priority queue of length", len(pqueue))
+	for i := 0; i < len(pqueue); i++ {
+		item := pqueue[i]
+		fmt.Println(item.Value.Node.Hash, "prio, dista", item.Priority, item.Value.Distance)
+	}
 }
 
 // update modifies the priority and value of an Item in the queue.

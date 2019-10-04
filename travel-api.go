@@ -11,6 +11,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
+// PathRequestBody API Structure
 type PathRequestBody struct {
 	FromLocation Coordinate `json:"fromLocation"`
 	ToLocation   Coordinate `json:"toLocation"`
@@ -28,8 +29,9 @@ func enableCors(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
 }
 
+// FindPathResponse API Response
 type FindPathResponse struct {
-	Data     GeoJson `json:"data"`
+	Data     GeoJSON `json:"data"`
 	Distance float64 `json:"distance"`
 }
 
@@ -51,7 +53,7 @@ func findpathHandler(w http.ResponseWriter, r *http.Request) {
 
 	features[0] = featureOut
 
-	data := GeoJson{
+	data := GeoJSON{
 		Type:     "FeatureCollection",
 		Features: features,
 	}
@@ -60,10 +62,10 @@ func findpathHandler(w http.ResponseWriter, r *http.Request) {
 		Data:     data,
 		Distance: route.Distance}
 
-	geojsonDataInJson, _ := json.Marshal(&response)
+	geojsonDataInJSON, _ := json.Marshal(&response)
 
 	enableCors(&w)
-	w.Write(geojsonDataInJson)
+	w.Write(geojsonDataInJSON)
 }
 
 func homeLink(w http.ResponseWriter, r *http.Request) {

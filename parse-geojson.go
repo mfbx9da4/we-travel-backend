@@ -8,6 +8,7 @@ import (
 	"strconv"
 )
 
+// Property Geojson Property
 type Property struct {
 	ID       string `json:"id"`
 	Type     string `json:"type"`
@@ -22,15 +23,17 @@ type Coordinate = [2]float64
 
 // HashCoordinate return coords as string
 func HashCoordinate(coords Coordinate) string {
-	var hash = strconv.FormatFloat(coords[0], 'f', -1, 64) + strconv.FormatFloat(coords[1], 'f', -1, 64)
+	var hash = strconv.FormatFloat(coords[0], 'f', -1, 64) + "," + strconv.FormatFloat(coords[1], 'f', -1, 64)
 	return hash
 }
 
+// Geometry Geojson Geometry
 type Geometry struct {
 	Type        string       `json:"type"`
 	Coordinates []Coordinate `json:"coordinates"`
 }
 
+// Feature Geojson Feature
 type Feature struct {
 	Type       string   `json:"type"`
 	ID         string   `json:"id"`
@@ -38,20 +41,20 @@ type Feature struct {
 	Geometry   Geometry `json:"geometry"`
 }
 
-type GeoJson struct {
+// GeoJSON data structure
+type GeoJSON struct {
 	Type     string    `json:"type"`
 	Features []Feature `json:"features"`
 }
 
-func createGraph(geojson GeoJson) Graph {
+func createGraph(geojson GeoJSON) Graph {
 	var graph Graph
 	for i := 0; i < len(geojson.Features); i++ {
 		var feature = geojson.Features[i]
 		var prev *Node
 		for j := 0; j < len(feature.Geometry.Coordinates); j++ {
 			var coords = feature.Geometry.Coordinates[j]
-			node := GetOrCreateNode(coords)
-			graph.AddNode(&node)
+			node := graph.GetOrCreateNode(coords)
 			if j != 0 {
 				graph.AddEdge(&node, prev)
 				graph.AddEdge(prev, &node)
@@ -84,7 +87,7 @@ func loadGeoJSON() Graph {
 	fmt.Println("Successfully Opened geojson")
 	byteValue, _ := ioutil.ReadAll(jsonFile)
 	fmt.Println("Successfully ReadAll geojson")
-	var geojson GeoJson
+	var geojson GeoJSON
 	json.Unmarshal(byteValue, &geojson)
 	fmt.Println("Successfully Unmarshalled geojson with N features", len(geojson.Features))
 

@@ -10,29 +10,13 @@ import (
 	//"github.com/cheekybits/genny/generic"
 )
 
-var exists = struct{}{}
+// Exists null value for sets
+type Exists struct{}
 
-// Node a single node that composes the tree
-type Node struct {
-	Value Coordinate
-	Hash  string
-}
-
-// GetOrCreateNode for create node from coords
-func GetOrCreateNode(coords Coordinate) Node {
-	hash := HashCoordinate(coords)
-	if graph.nodes[hash] == nil {
-		return Node{coords, hash}
-	}
-	return *graph.nodes[hash]
-}
-
-func (n *Node) String() string {
-	return fmt.Sprintf("%v", n.Value)
-}
+var exists Exists
 
 // SetOfNodes Set of nodes
-type SetOfNodes = map[*Node]struct{}
+type SetOfNodes = map[Node]Exists
 
 // Graph Basic graph complete with concurrency safe lock
 type Graph struct {
@@ -41,8 +25,29 @@ type Graph struct {
 	lock  sync.RWMutex
 }
 
-// AddNode adds a node to the graph
-func (graph *Graph) AddNode(n *Node) {
+// Node a single node that composes the tree
+type Node struct {
+	Value Coordinate
+	Hash  string
+}
+
+// GetOrCreateNode for create node from coords
+func (graph *Graph) GetOrCreateNode(coords Coordinate) Node {
+	hash := HashCoordinate(coords)
+	if node, ok := graph.nodes[hash]; ok {
+		return *node
+	}
+	newNode := Node{coords, hash}
+	graph.CreateNode(&newNode)
+	return newNode
+}
+
+func (n *Node) String() string {
+	return fmt.Sprintf("%v", n.Value)
+}
+
+// CreateNode adds a node to the graph
+func (graph *Graph) CreateNode(n *Node) {
 	graph.lock.Lock()
 	if graph.nodes == nil {
 		graph.nodes = make(map[string]*Node)
@@ -60,37 +65,39 @@ func (graph *Graph) AddEdge(n1, n2 *Node) {
 	if graph.edges[*n1] == nil {
 		graph.edges[*n1] = make(SetOfNodes)
 	}
-	if graph.edges[*n2] == nil {
-		graph.edges[*n2] = make(SetOfNodes)
+	if _, ok := graph.edges[*n1][*n2]; !ok {
+		graph.edges[*n1][*n2] = exists
 	}
-	graph.edges[*n1][n2] = exists
-	graph.edges[*n2][n1] = exists
 	graph.lock.Unlock()
 }
 
-// Print graph
-func (graph *Graph) String() {
-	graph.lock.RLock()
+func (graph *Graph) String() string {
 	s := ""
-	// for i := 0; i < len(graph.nodes); i++ {
 	for _, node := range graph.nodes {
 		s += node.String() + " -> "
-		near := graph.edges[*node]
-		for j := range near {
-			s += j.String() + " "
+		for child := range graph.edges[*node] {
+			s += child.String() + " "
 		}
 		s += "\n"
 	}
-	fmt.Println(s)
+	return s
+}
+
+// Print graph
+func (graph *Graph) Print() {
+	graph.lock.RLock()
+	fmt.Println(graph.String())
 	graph.lock.RUnlock()
 }
 
+// QueueItemValue Best Path to node
 type QueueItemValue struct {
 	Node     Node
 	Path     []Node
 	Distance float64
 }
 
+// NodeQueue sorted queue of paths
 type NodeQueue struct {
 	items []QueueItemValue
 	lock  sync.RWMutex
@@ -188,15 +195,15 @@ func (graph *Graph) FindPath(src, dest *Node) Route {
 	heap.Init(&pqueue)
 
 	// Keep track of visited
-	visited := make(map[*Node]bool)
+	visited := make(map[string]bool)
 	for {
 		if pqueue.Len() == 0 {
 			break
 		}
-		pqitem := pqueue.Pop().(*QueueItem)
+		pqitem := heap.Pop(&pqueue).(*QueueItem)
 		cur := pqitem.Value
 		node := cur.Node
-		visited[&node] = true
+		visited[node.Hash] = true
 		children := graph.edges[node]
 
 		for child := range children {
@@ -207,23 +214,22 @@ func (graph *Graph) FindPath(src, dest *Node) Route {
 			elapsed := math.Sqrt(dx*dx+dy*dy) + cur.Distance
 			remaining := math.Sqrt(remaingDx*remaingDx + remainingDy*remainingDy)
 
-			if *child == *dest {
-				fmt.Println(*child, *dest)
-				path := append(cur.Path, *child)
+			if child == *dest {
+				path := append(cur.Path, child)
 				return Route{path, elapsed}
 			}
 
-			if !visited[child] {
+			if !visited[child.Hash] {
 				// TODO: Only add to path if different gradient
-				path := append(cur.Path, *child)
-				queueItem := QueueItemValue{*child, path, elapsed}
+				path := append(cur.Path, child)
+				queueItem := QueueItemValue{child, path, elapsed}
 				newItem := QueueItem{
 					Value:    &queueItem,
 					Priority: elapsed + remaining,
 				}
 				heap.Push(&pqueue, &newItem)
 				pqueue.update(&newItem, newItem.Value, newItem.Priority)
-				visited[child] = true
+				visited[child.Hash] = true
 			}
 		}
 	}
@@ -236,7 +242,6 @@ func (graph *Graph) FindPath(src, dest *Node) Route {
 func (graph *Graph) CalculatePath(startCoords Coordinate, endCoords Coordinate) Route {
 	nodeStart := graph.FindNode(startCoords)
 	nodeEnd := graph.FindNode(endCoords)
-	fmt.Println("st, end,", nodeStart, nodeEnd)
 	pathFound := graph.FindPath(nodeStart, nodeEnd)
 	return pathFound
 }
